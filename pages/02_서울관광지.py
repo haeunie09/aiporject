@@ -12,7 +12,7 @@ st.set_page_config(
 )
 
 
-# 2. 관광지 데이터
+# 2. 관광지 데이터 정의
 @st.cache_data
 def get_tour_data():
     data = [
@@ -244,4 +244,8 @@ with tab2:
         {
             "시간": "17:00 - 19:00",
             "구분": "관광/저녁",
-            "장소/내용":
+            "장소/내용": "N서울타워 & 엔그릴",
+            "비고": "서울 도심 전경 감상 및 식사",
+        },
+    ]
+    st.dataframe(pd.DataFrame(day2_schedule), use_container_width=True)
