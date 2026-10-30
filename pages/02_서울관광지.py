@@ -1,18 +1,18 @@
-import os
+import folium
 import pandas as pd
-import pydeck as pdk
 import streamlit as st
+from streamlit_folium import st_folium
 
 # 1. 페이지 기본 설정
 st.set_page_config(
-    page_title="서울 Top 10 관광지 지도",
-    page_icon="🗽",
+    page_title="서울 Top 10 관광지 지도 (Folium)",
+    page_icon="🗺️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 
-# 2. 데이터 자동 생성 함수 (외부 CSV 없이 코드 내부에서 생성)
+# 2. 관광지 데이터 정의 (코드 내장형)
 @st.cache_data
 def get_tour_data():
     data = [
@@ -92,9 +92,9 @@ def get_tour_data():
 
 df_spots = get_tour_data()
 
-# 3. 사이드바 구성
+# 3. 사이드바 구성 (필터 및 선택)
 st.sidebar.title("🔍 관광지 필터")
-st.sidebar.markdown("외국인 관광객이 사랑하는 **서울 대표 관광지 Top 10**입니다.")
+st.sidebar.markdown("외국인 관광객이 사랑하는 **서울 대표 관광지 Top 10**")
 
 categories = ["전체"] + list(df_spots["category"].unique())
 selected_category = st.sidebar.selectbox("카테고리 선택", categories)
@@ -109,61 +109,53 @@ selected_spot_name = st.sidebar.radio(
     ["전체 보기"] + list(filtered_df["name"]),
 )
 
-# 4. 메인 화면
+# 4. 메인 화면 헤더
 st.title("🇰🇷 외국인이 좋아하는 서울 주요 관광지 Top 10")
-st.markdown("지도의 **핀을 클릭**하면 해당 명소의 정보를 확인할 수 있습니다.")
+st.markdown("마커를 클릭하면 상세 설명을 확인할 수 있습니다.")
 st.divider()
 
-# 5. 지도 위치 및 줌 설정
+# 5. 지도 중심 좌표 및 줌 레벨 결정
 if selected_spot_name != "전체 보기":
     spot_info = filtered_df[filtered_df["name"] == selected_spot_name].iloc[0]
-    view_state = pdk.ViewState(
-        latitude=spot_info["lat"],
-        longitude=spot_info["lon"],
-        zoom=14,
-        pitch=45,
-    )
-    map_data = filtered_df[filtered_df["name"] == selected_spot_name]
+    map_center = [spot_info["lat"], spot_info["lon"]]
+    zoom_level = 15
 else:
-    view_state = pdk.ViewState(
-        latitude=37.5550,
-        longitude=126.9800,
-        zoom=11.2,
-        pitch=30,
-    )
-    map_data = filtered_df
+    map_center = [37.5550, 126.9800]  # 서울 중심
+    zoom_level = 12
 
-# 6. 지도 레이어 정의
-layer = pdk.Layer(
-    "ScatterplotLayer",
-    data=map_data,
-    get_position=["lon", "lat"],
-    get_color="[235, 64, 52, 200]",
-    get_radius=200,
-    radius_scale=1,
-    radius_min_pixels=8,
-    radius_max_pixels=20,
-    pickable=True,
-)
+# 6. Folium 지도 객체 생성
+m = folium.Map(location=map_center, zoom_start=zoom_level, tiles="OpenStreetMap")
 
-r = pdk.Deck(
-    layers=[layer],
-    initial_view_state=view_state,
-    tooltip={
-        "html": "<b>{name}</b><br/><i>{category}</i><br/>{description}",
-        "style": {
-            "backgroundColor": "navy",
-            "color": "white",
-            "fontSize": "14px",
-            "padding": "10px",
-            "borderRadius": "5px",
-        },
-    },
-)
+# 7. 지도에 마커 추가
+for _, row in filtered_df.iterrows():
+    # 선택된 명소는 다른 색상(빨간색)으로 강조, 나머지는 파란색
+    if selected_spot_name == row["name"]:
+        marker_color = "red"
+        icon_shape = "star"
+    else:
+        marker_color = "blue"
+        icon_shape = "info-sign"
 
-st.pydeck_chart(r)
+    # 팝업 HTML 구성
+    popup_html = f"""
+    <div style="width: 200px;">
+        <h4 style="margin-bottom: 5px; color: #333;"><b>{row['name']}</b></h4>
+        <p style="margin: 0; font-size: 12px; color: #666;"><b>분류:</b> {row['category']}</p>
+        <p style="margin-top: 5px; font-size: 13px; color: #111;">{row['description']}</p>
+    </div>
+    """
 
-# 7. 하단 상세 정보
+    folium.Marker(
+        location=[row["lat"], row["lon"]],
+        popup=folium.Popup(popup_html, max_width=300),
+        tooltip=row["name"],
+        icon=folium.Icon(color=marker_color, icon=icon_shape, prefix="glyphicon"),
+    ).add_to(m)
+
+# Streamlit에 Folium 지도 렌더링
+st_folium(m, width="100%", height=550)
+
+# 8. 하단 상세 정보 테이블 및 카드
 st.divider()
 st.subheader("📋 관광지 목록 상세")
 
@@ -194,5 +186,5 @@ with col2:
         )
     else:
         st.success(
-            "왼쪽 사이드바에서 특정 관광지를 선택하시면 해당 위치로 지도가 이동합니다!"
+            "왼쪽 사이드바에서 특정 관광지를 선택하시면 해당 위치로 지도가 이동하며 마커가 강조됩니다!"
         )
