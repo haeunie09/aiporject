@@ -57,8 +57,37 @@ analysis_mode = st.sidebar.radio(
 
 st.markdown("---")
 
+# 공통 민트색 그라데이션 리스트 정의 (나머지 순위용)
+mint_shades = [
+    "#008B8B",
+    "#009688",
+    "#20B2AA",
+    "#26A69A",
+    "#48D1CC",
+    "#40E0D0",
+    "#80CBC4",
+    "#A7FFEB",
+    "#AFEEEE",
+    "#B2DFDB",
+    "#BFEFFF",
+    "#C6E2FF",
+    "#D1EEEE",
+    "#E0FFFF",
+    "#F0FFFF",
+]
+
+
+def get_mint_colors(n):
+  """요청된 개수(n)에 맞춰 민트색 그라데이션 리스트를 생성하는 함수"""
+  colors = []
+  for i in range(n):
+    idx = int(i * (len(mint_shades) / max(1, n)))
+    colors.append(mint_shades[min(idx, len(mint_shades) - 1)])
+  return colors
+
+
 # ==========================================
-# 기능 1: 국가별 MBTI 분포 보기
+# 기능 1: 국가별 MBTI 분포 보기 (1등: 베이비핑크, 나머지: 민트 그라데이션)
 # ==========================================
 if analysis_mode == "1️⃣ 국가별 MBTI 분포 보기":
   st.subheader("📊 선택한 국가의 16가지 MBTI 비율 비교")
@@ -84,25 +113,9 @@ if analysis_mode == "1️⃣ 국가별 MBTI 분포 보기":
         .reset_index(drop=True)
     )
 
-    # 색상 설정 (1등: 베이비핑크 #FFB6C1 / 2~16등: 푸른빛 계열 그라데이션)
-    blue_shades = [
-        "#17BECF",
-        "#1F77B4",
-        "#2575FC",
-        "#3A7BD5",
-        "#4A90E2",
-        "#5C9CE6",
-        "#6EA8EA",
-        "#80B4EE",
-        "#92C0F2",
-        "#A4CCF6",
-        "#B6D8FA",
-        "#C8E4FE",
-        "#DAF0FF",
-        "#EBF6FF",
-        "#F2F9FF",
-    ]
-    colors = ["#FFB6C1"] + blue_shades[: len(data) - 1]
+    # 색상 설정: 1등은 베이비핑크(#FFB6C1), 나머지는 민트 그라데이션
+    mint_subset = get_mint_colors(len(data) - 1)
+    colors = ["#FFB6C1"] + mint_subset
     data["Color"] = colors
 
     fig = go.Figure(
@@ -150,7 +163,7 @@ if analysis_mode == "1️⃣ 국가별 MBTI 분포 보기":
       )
 
 # ==========================================
-# 기능 2: MBTI 유형별 국가 순위 보기 (오류 수정 완료)
+# 기능 2: MBTI 유형별 국가 순위 보기 (1등: 베이비핑크, 나머지: 민트 그라데이션)
 # ==========================================
 elif analysis_mode == "2️⃣ MBTI 유형별 국가 순위 보기":
   st.subheader("🏆 특정 MBTI 유형이 높은 국가 순위 (1등부터 나열)")
@@ -170,26 +183,8 @@ elif analysis_mode == "2️⃣ MBTI 유형별 국가 순위 보기":
   ranked_df["Percentage"] = ranked_df[selected_mbti] * 100
 
   # 색상 설정: 1등은 베이비핑크(#FFB6C1), 나머지는 민트색 그라데이션
-  mint_shades = [
-      "#008B8B",
-      "#20B2AA",
-      "#48D1CC",
-      "#40E0D0",
-      "#AFEEEE",
-      "#BFEFFF",
-      "#C6E2FF",
-      "#D1EEEE",
-      "#E0FFFF",
-      "#F0FFFF",
-  ]
-
-  mint_colors = []
-  for i in range(top_n - 1):
-    idx = int(i * (len(mint_shades) / max(1, top_n - 1)))
-    mint_colors.append(mint_shades[min(idx, len(mint_shades) - 1)])
-
-  # 1등 베이비핑크(#FFB6C1) + 나머지 민트색 그라데이션 조합
-  rank_colors = ["#FFB6C1"] + mint_colors
+  mint_subset = get_mint_colors(top_n - 1)
+  rank_colors = ["#FFB6C1"] + mint_subset
 
   fig_rank = go.Figure(
       data=[
@@ -207,7 +202,6 @@ elif analysis_mode == "2️⃣ MBTI 유형별 국가 순위 보기":
       ]
   )
 
-  # [수정 완료] f-string 문법 오류(top_n개) 제거 및 정상 반영
   fig_rank.update_layout(
       title=dict(
           text=(
@@ -216,12 +210,4 @@ elif analysis_mode == "2️⃣ MBTI 유형별 국가 순위 보기":
           ),
           font=dict(size=18),
       ),
-      xaxis=dict(title="국가", tickangle=-45),
-      yaxis=dict(title="비율 (%)", gridcolor="LightGray"),
-      template="plotly_white",
-      height=550,
-  )
-
-  st.plotly_chart(fig_rank, use_container_width=True)
-
-  top
+      xaxis=dict(title
