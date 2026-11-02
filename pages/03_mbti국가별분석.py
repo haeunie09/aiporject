@@ -210,4 +210,25 @@ elif analysis_mode == "2️⃣ MBTI 유형별 국가 순위 보기":
           ),
           font=dict(size=18),
       ),
-      xaxis=dict(title
+      xaxis=dict(title="국가", tickangle=-45),
+      yaxis=dict(title="비율 (%)", gridcolor="LightGray"),
+      template="plotly_white",
+      height=550,
+  )
+
+  st.plotly_chart(fig_rank, use_container_width=True)
+
+  top_country = ranked_df.iloc[0]["Country"]
+  top_country_pct = ranked_df.iloc[0]["Percentage"]
+  st.success(
+      f"💡 **{selected_mbti}** 유형 비율이 전 세계에서 가장 높은 국가는"
+      f" **{top_country}**입니다. ({top_country_pct:.2f}%)"
+  )
+
+  with st.expander("📄 전체 순위 데이터 테이블 보기"):
+    st.dataframe(
+        ranked_df[["Country", "Percentage"]].rename(
+            columns={"Country": "국가", "Percentage": "비율 (%)"}
+        ),
+        use_container_width=True,
+    )
