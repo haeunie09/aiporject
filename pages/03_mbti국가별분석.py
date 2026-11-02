@@ -58,7 +58,7 @@ analysis_mode = st.sidebar.radio(
 st.markdown("---")
 
 # ==========================================
-# 기능 1: 국가별 MBTI 분포 보기 (기존 기능 유지)
+# 기능 1: 국가별 MBTI 분포 보기
 # ==========================================
 if analysis_mode == "1️⃣ 국가별 MBTI 분포 보기":
   st.subheader("📊 선택한 국가의 16가지 MBTI 비율 비교")
@@ -150,7 +150,7 @@ if analysis_mode == "1️⃣ 국가별 MBTI 분포 보기":
       )
 
 # ==========================================
-# 기능 2: MBTI 유형별 국가 순위 보기 (신규 추가 기능)
+# 기능 2: MBTI 유형별 국가 순위 보기 (오류 수정 완료)
 # ==========================================
 elif analysis_mode == "2️⃣ MBTI 유형별 국가 순위 보기":
   st.subheader("🏆 특정 MBTI 유형이 높은 국가 순위 (1등부터 나열)")
@@ -170,31 +170,25 @@ elif analysis_mode == "2️⃣ MBTI 유형별 국가 순위 보기":
   ranked_df["Percentage"] = ranked_df[selected_mbti] * 100
 
   # 색상 설정: 1등은 베이비핑크(#FFB6C1), 나머지는 민트색 그라데이션
-  # 짙은 민트(#008B8B / #20B2AA)에서 연한 민트(#AFEEEE / #E0FFFF)로 흐려지는 그라데이션 생성
   mint_shades = [
       "#008B8B",
-      "#008B8B",
       "#20B2AA",
-      "#20B2AA",
-      "#48D1CC",
       "#48D1CC",
       "#40E0D0",
-      "#AFEEEE",
       "#AFEEEE",
       "#BFEFFF",
       "#C6E2FF",
       "#D1EEEE",
       "#E0FFFF",
-      "#E0FFFF",
       "#F0FFFF",
   ]
-  # 선택된 top_n 수에 맞게 민트색 리스트 조정
+
   mint_colors = []
   for i in range(top_n - 1):
     idx = int(i * (len(mint_shades) / max(1, top_n - 1)))
     mint_colors.append(mint_shades[min(idx, len(mint_shades) - 1)])
 
-  # 1등 베이비핑크 + 나머지 민트색 그라데이션 조합
+  # 1등 베이비핑크(#FFB6C1) + 나머지 민트색 그라데이션 조합
   rank_colors = ["#FFB6C1"] + mint_colors
 
   fig_rank = go.Figure(
@@ -213,10 +207,11 @@ elif analysis_mode == "2️⃣ MBTI 유형별 국가 순위 보기":
       ]
   )
 
+  # [수정 완료] f-string 문법 오류(top_n개) 제거 및 정상 반영
   fig_rank.update_layout(
       title=dict(
           text=(
-              f"<b>[{selected_mbti}] 유형 비율 상위 {top_n개}개 국가 순위"
+              f"<b>[{selected_mbti}] 유형 비율 상위 {top_n}개 국가 순위"
               " (1등부터)</b>"
           ),
           font=dict(size=18),
@@ -229,17 +224,4 @@ elif analysis_mode == "2️⃣ MBTI 유형별 국가 순위 보기":
 
   st.plotly_chart(fig_rank, use_container_width=True)
 
-  top_country = ranked_df.iloc[0]["Country"]
-  top_country_pct = ranked_df.iloc[0]["Percentage"]
-  st.success(
-      f"💡 **{selected_mbti}** 유형 비율이 전 세계에서 가장 높은 국가는"
-      f" **{top_country}**입니다. ({top_country_pct:.2f}%)"
-  )
-
-  with st.expander("📄 전체 순위 데이터 테이블 보기"):
-    st.dataframe(
-        ranked_df[["Country", "Percentage"]].rename(
-            columns={"Country": "국가", "Percentage": "비율 (%)"}
-        ),
-        use_container_width=True,
-    )
+  top
