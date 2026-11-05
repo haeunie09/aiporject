@@ -36,7 +36,6 @@ setup_korean_font()
 # 3. 데이터 로드 및 전처리 (상위 폴더의 population.csv 참조)
 @st.cache_data
 def load_data():
-    # pages 폴더 기준 상위 폴더에 위치한 population.csv 경로 설정
     file_path = os.path.join(os.path.dirname(__file__), '..', 'population.csv')
     
     # CP949 인코딩으로 불러오기
@@ -79,20 +78,26 @@ age_brackets = [
     '50~59세', '60~69세', '70~79세', '80~89세', '90~99세', '100세 이상'
 ]
 
-# 칼럼명 조합 (예: 2024년_거주자_0~9세)
 target_cols = [f"{selected_year}년_{gender_code}_{age}" for age in age_brackets]
 
 region_row = df[df['지역명'] == selected_region].iloc[0]
 population_values = [region_row[col] for col in target_cols]
 
-# 7. 그래프 시각화
+# 7. 성별에 따른 그래프 색상 설정 (여성: 베이비 핑크, 남성: 밝은 하늘색, 전체: 보라색 계열 등)
+color_map = {
+    "여성": "#FFB6C1",  # 베이비 핑크
+    "남성": "#87CEEB",  # 밝은 하늘색
+    "전체": "#9370DB"   # 미디엄 퍼플 (전체 선택 시)
+}
+line_color = color_map.get(selected_gender_label, "#9370DB")
+
+# 8. 그래프 시각화
 fig, ax = plt.subplots(figsize=(12, 6))
 
-# 베이비 핑크 색상 적용 (#FFB6C1) 및 꺾은선 그래프 스타일 지정
 ax.plot(
     age_brackets, 
     population_values, 
-    color='#FFB6C1', 
+    color=line_color, 
     marker='o', 
     linewidth=3, 
     markersize=8, 
@@ -100,12 +105,10 @@ ax.plot(
 )
 
 # 눈금 및 구분선(Grid) 설정
-# 가로축: 10살 단위 구분선
 ax.grid(True, which='both', axis='both', linestyle='--', alpha=0.5)
 
-# 세로축: 10만 단위(100,000) 구분선 설정
+# 세로축: 10만 단위(100,000) 구분선 설정 및 쉼표 추가
 ax.yaxis.set_major_locator(ticker.MultipleLocator(100000))
-# Y축 숫자 표기에 쉼표(,) 추가
 ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f"{int(x):,}"))
 
 # 축 이름 및 제목 설정
@@ -122,7 +125,7 @@ for i, txt in enumerate(population_values):
 plt.tight_layout()
 st.pyplot(fig)
 
-# 8. 선택된 조건 요약 데이터 표 보기
+# 9. 선택된 조건 요약 데이터 표 보기
 st.subheader("📋 선택 데이터 상세 보기")
 summary_df = pd.DataFrame({
     '연령대': age_brackets,
