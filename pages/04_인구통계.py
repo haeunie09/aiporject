@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. 한글 깨짐 방지를 위한 폰트 설정 강화
+# 2. 한글 깨짐 방지를 위한 폰트 설정
 def setup_korean_font():
     current_os = platform.system()
     if current_os == 'Windows':
@@ -111,10 +111,10 @@ ax.grid(True, which='both', axis='both', linestyle='--', alpha=0.5)
 ax.yaxis.set_major_locator(ticker.MultipleLocator(100000))
 ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f"{int(x):,}"))
 
-# 축 이름 및 요청하신 형식의 제목 설정 (예: 2024 동대문구 인구 통계)
+# 축 이름 및 요청하신 제목 형식 반영 (예: 2024년 동대문구 인구 통계)
 ax.set_xlabel("나이 (연령대)", fontsize=12, labelpad=10)
 ax.set_ylabel("인구수 (명)", fontsize=12, labelpad=10)
-ax.set_title(f"{selected_year}년 {selected_region} 인구 통계 ({selected_gender_label})", fontsize=16, pad=15, fontweight='bold')
+ax.set_title(f"{selected_year}년 {selected_region} 인구 통계", fontsize=16, pad=15, fontweight='bold')
 
 # 데이터 포인트 값 표시 (상단 숫자 안내)
 for i, txt in enumerate(population_values):
