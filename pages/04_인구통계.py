@@ -13,22 +13,22 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. Streamlit Cloud 및 다양한 OS 환경을 고려한 한글 폰트 설정
+# 2. 한글 깨짐 방지를 위한 폰트 설정 강화
 def setup_korean_font():
-    # 리눅스(Streamlit Cloud)에서 나눔글꼴 경로 검색 및 설정
-    font_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
-    if os.path.exists(font_path):
-        fm.fontManager.addfont(font_path)
-        plt.rc('font', family='NanumGothic')
+    current_os = platform.system()
+    if current_os == 'Windows':
+        plt.rc('font', family='Malgun Gothic')
+    elif current_os == 'Darwin':
+        plt.rc('font', family='AppleGothic')
     else:
-        # 로컬(Windows / Mac) 환경 예외 처리
-        if platform.system() == 'Windows':
-            plt.rc('font', family='Malgun Gothic')
-        elif platform.system() == 'Darwin':
-            plt.rc('font', family='AppleGothic')
-        else:
+        # 리눅스(Streamlit Cloud) 환경에서 나눔고딕 명시적 지정
+        font_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
+        if os.path.exists(font_path):
+            fm.fontManager.addfont(font_path)
             plt.rc('font', family='NanumGothic')
-    
+        else:
+            plt.rc('font', family='sans-serif')
+            
     plt.rc('axes', unicode_minus=False)
 
 setup_korean_font()
@@ -83,11 +83,11 @@ target_cols = [f"{selected_year}년_{gender_code}_{age}" for age in age_brackets
 region_row = df[df['지역명'] == selected_region].iloc[0]
 population_values = [region_row[col] for col in target_cols]
 
-# 7. 성별에 따른 그래프 색상 설정 (여성: 베이비 핑크, 남성: 밝은 하늘색, 전체: 보라색 계열 등)
+# 7. 성별에 따른 그래프 색상 설정 (여성: 베이비 핑크, 남성: 밝은 하늘색, 전체: 보라색)
 color_map = {
     "여성": "#FFB6C1",  # 베이비 핑크
     "남성": "#87CEEB",  # 밝은 하늘색
-    "전체": "#9370DB"   # 미디엄 퍼플 (전체 선택 시)
+    "전체": "#9370DB"   # 보라색
 }
 line_color = color_map.get(selected_gender_label, "#9370DB")
 
@@ -111,10 +111,10 @@ ax.grid(True, which='both', axis='both', linestyle='--', alpha=0.5)
 ax.yaxis.set_major_locator(ticker.MultipleLocator(100000))
 ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f"{int(x):,}"))
 
-# 축 이름 및 제목 설정
+# 축 이름 및 요청하신 형식의 제목 설정 (예: 2024 동대문구 인구 통계)
 ax.set_xlabel("나이 (연령대)", fontsize=12, labelpad=10)
-ax.set_ylabel("인구수 (명 / 10만 단위 구분)", fontsize=12, labelpad=10)
-ax.set_title(f"[{selected_year}년] {selected_region} - {selected_gender_label} 연령별 인구수", fontsize=15, pad=15)
+ax.set_ylabel("인구수 (명)", fontsize=12, labelpad=10)
+ax.set_title(f"{selected_year}년 {selected_region} 인구 통계 ({selected_gender_label})", fontsize=16, pad=15, fontweight='bold')
 
 # 데이터 포인트 값 표시 (상단 숫자 안내)
 for i, txt in enumerate(population_values):
