@@ -21,7 +21,6 @@ def setup_korean_font():
     elif current_os == 'Darwin':
         plt.rc('font', family='AppleGothic')
     else:
-        # 리눅스(Streamlit Cloud) 환경에서 나눔고딕 명시적 지정
         font_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
         if os.path.exists(font_path):
             fm.fontManager.addfont(font_path)
@@ -37,17 +36,13 @@ setup_korean_font()
 @st.cache_data
 def load_data():
     file_path = os.path.join(os.path.dirname(__file__), '..', 'population.csv')
-    
-    # CP949 인코딩으로 불러오기
     df = pd.read_csv(file_path, encoding='cp949')
     
-    # 숫자 칼럼의 쉼표(,) 제거 및 int 변환
     num_cols = [c for c in df.columns if c != '행정구역']
     for col in num_cols:
         df[col] = df[col].astype(str).str.replace(',', '').str.strip()
         df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
         
-    # 행정구역명 정제 (코드 제거 후 지역명만 추출)
     df['지역명'] = df['행정구역'].str.split('(').str[0].str.strip()
     return df
 
@@ -60,16 +55,13 @@ st.write("행정구, 성별, 연도를 선택하여 연령별 인구 흐름을 �
 # 5. 사이드바 조건 선택 옵션
 st.sidebar.header("⚙️ 분석 조건 선택")
 
-# (1) 행정구 선택
 region_list = df['지역명'].tolist()
 selected_region = st.sidebar.selectbox("행정구 선택", region_list, index=0)
 
-# (2) 성별 선택
 gender_options = {"전체": "거주자", "남성": "남_거주자", "여성": "여_거주자"}
 selected_gender_label = st.sidebar.selectbox("성별 선택", list(gender_options.keys()), index=0)
 gender_code = gender_options[selected_gender_label]
 
-# (3) 연도 선택 (2020년 ~ 2025년)
 selected_year = st.sidebar.slider("연도 선택", min_value=2020, max_value=2025, value=2024)
 
 # 6. 선택한 조건에 따른 데이터 추출
@@ -104,24 +96,21 @@ ax.plot(
     label=f"{selected_region} ({selected_gender_label})"
 )
 
-# 눈금 및 구분선(Grid) 설정
 ax.grid(True, which='both', axis='both', linestyle='--', alpha=0.5)
 
-# 세로축: 10만 단위(100,000) 구분선 설정 및 쉼표 추가
 ax.yaxis.set_major_locator(ticker.MultipleLocator(100000))
 ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f"{int(x):,}"))
 
-# 축 이름 및 요청하신 제목 형식 반영 (예: 2024년 동대문구 인구 통계)
 ax.set_xlabel("나이 (연령대)", fontsize=12, labelpad=10)
 ax.set_ylabel("인구수 (명)", fontsize=12, labelpad=10)
-ax.set_title(f"{selected_year}년 {selected_region} 인구 통계", fontsize=16, pad=15, fontweight='bold')
 
-# 데이터 포인트 값 표시 (상단 숫자 안내)
+# 선택한 연도와 행정구가 정확히 합쳐진 제목 설정
+ax.set_title(f"{selected_year}년 {selected_region} 인구 통계 ({selected_gender_label})", fontsize=16, pad=15, fontweight='bold')
+
 for i, txt in enumerate(population_values):
     ax.annotate(f"{txt:,}", (age_brackets[i], population_values[i]), 
                 textcoords="offset points", xytext=(0, 8), ha='center', fontsize=9)
 
-# 그래프 여백 및 Streamlit 출력
 plt.tight_layout()
 st.pyplot(fig)
 
