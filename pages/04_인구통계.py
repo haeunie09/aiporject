@@ -64,15 +64,4 @@ age_brackets = [
     '50~59세', '60~69세', '70~79세', '80~89세', '90~99세', '100세 이상'
 ]
 
-# x축 레이블을 '0~10' 형태(숫자만 남기고 '세' 제거, 10세 단위)로 변환
-x_labels = ['0~10' if age == '0~9세' else ('100+' if '100' in age else age.replace('세', '')) for age in age_brackets]
-
-target_cols = [f"{selected_year}년_{gender_code}_{age}" for age in age_brackets]
-
-region_row = df[df['지역명'] == selected_region].iloc[0]
-population_values = [region_row[col] for col in target_cols]
-
-color_map = {
-    "여성": "#FFB6C1",
-    "남성": "#87CEEB",
-    "전체": "#937
+x_labels = ['0~10' if age == '0~9세' else ('
