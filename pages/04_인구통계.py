@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -54,13 +55,15 @@ def load_data():
 
 df = load_data()
 
-st.title("📊 서울시 구별 연령대 인구 분포 대시보드")
-st.write("행정구 복수 비교 및 특정 연령대별 최다 거주 지역 분석 기능을 제공합니다.")
+# 💡 '서울시' 데이터를 데이터프레임 전체에서 원천적으로 아예 제외시킵니다.
+df = df[df['지역명'] != '서울시'].reset_index(drop=True)
 
-# 사이드바 설정 (안전한 단일 컴포넌트들만 배치)
+st.title("📊 서울시 구별 연령대 인구 분포 대시보드")
+st.write("행정구 복수 비교 및 특정 연령대별 최다 거주 지역 분석 기능을 제공합니다. (서울시 전체 통계 제외)")
+
 st.sidebar.header("⚙️ 분석 조건 선택")
 
-region_list = [r for r in df['지역명'].tolist() if r != '서울시']
+region_list = df['지역명'].tolist()
 selected_regions = st.sidebar.multiselect("비교할 행정구 선택 (복수 가능)", region_list, default=[region_list[0]])
 selected_year = st.sidebar.slider("연도 선택", min_value=2020, max_value=2025, value=2024)
 
@@ -116,7 +119,6 @@ st.divider()
 st.subheader("🏆 특정 연령대 인구 상위 자치구 순위 (서울시 제외)")
 st.write("원하시는 연령대와 표시할 자치구 개수를 선택하여 순위를 확인하세요.")
 
-# 메인 화면에 컬럼을 배치하여 SyntaxError 원천 차단
 col1, col2 = st.columns(2)
 with col1:
     selected_age_idx = st.selectbox("연령대 선택", range(len(age_brackets)), format_func=lambda x: x_labels[x])
@@ -126,8 +128,7 @@ with col2:
 target_col_name = f"{selected_year}년_거주자_{age_brackets[selected_age_idx]}"
 target_age_label = x_labels[selected_age_idx]
 
-sub_df = df[df['지역명'] != '서울시']
-ranked_df = sub_df[['지역명', target_col_name]].sort_values(by=target_col_name, ascending=False).head(top_n)
+ranked_df = df[['지역명', target_col_name]].sort_values(by=target_col_name, ascending=False).head(top_n)
 
 fig2, ax2 = plt.subplots(figsize=(12, 5))
 bars = ax2.bar(ranked_df['지역명'], ranked_df[target_col_name], color='#87CEEB', edgecolor='#4682B4')
@@ -161,3 +162,5 @@ for region in selected_regions:
 
 summary_df = pd.DataFrame(summary_data, index=age_brackets)
 st.dataframe(summary_df)
+
+```
