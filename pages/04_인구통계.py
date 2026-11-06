@@ -127,4 +127,25 @@ ax2.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f"{int(x):,}"))
 
 ax2.set_xlabel("행정구", fontsize=12, labelpad=10)
 ax2.set_ylabel("인\n구\n수", fontsize=12, labelpad=10, rotation=0, va='center')
-ax2.set_title(f"[{selected_year}년] {target_age_label}세 연령대 인구 상위
+ax2.set_title(f"[{selected_year}년] {target_age_label}세 연령대 인구 상위 자치구 ({selected_gender_label})", fontsize=14, pad=15, fontweight='bold')
+
+for bar in bars:
+    height = bar.get_height()
+    ax2.annotate(f'{height:,}',
+                xy=(bar.get_x() + bar.get_width() / 2, height),
+                xytext=(0, 4),  
+                textcoords="offset points",
+                ha='center', va='bottom', fontsize=8)
+
+plt.xticks(rotation=45)
+plt.tight_layout()
+st.pyplot(fig2)
+
+st.subheader("📋 선택된 자치구별 데이터 요약")
+summary_data = {}
+for region in selected_regions:
+    region_row = df[df['지역명'] == region].iloc[0]
+    summary_data[region] = [f"{region_row[col]:,}" for col in target_cols]
+
+summary_df = pd.DataFrame(summary_data, index=age_brackets)
+st.dataframe(summary_df)
