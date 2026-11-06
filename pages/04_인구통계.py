@@ -45,4 +45,25 @@ def load_data():
     df = pd.read_csv(file_path, encoding='cp949')
     
     num_cols = [c for c in df.columns if c != '행정구역']
-    for col
+    for col in num_cols:
+        df[col] = df[col].astype(str).str.replace(',', '').str.strip()
+        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
+        
+    df['지역명'] = df['행정구역'].str.split('(').str[0].str.strip()
+    return df
+
+df = load_data()
+
+st.title("📊 서울시 구별 연령대 인구 분포 대시보드")
+st.write("행정구 복수 비교 및 특정 연령대별 최다 거주 지역 분석 기능을 제공합니다.")
+
+st.sidebar.header("⚙️ 분석 조건 선택")
+
+region_list = [r for r in df['지역명'].tolist() if r != '서울시']
+selected_regions = st.sidebar.multiselect("행정구 선택 (복수 선택 가능)", region_list, default=[region_list[0]])
+
+selected_year = st.sidebar.slider("연도 선택", min_value=2020, max_value=2025, value=2024)
+
+age_brackets = [
+    '0~9세', '10~19세', '20~29세', '30~39세', '40~49세',
+    '50~59세', '60~69세', '70~79세
