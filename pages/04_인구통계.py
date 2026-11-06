@@ -64,6 +64,9 @@ age_brackets = [
     '50~59세', '60~69세', '70~79세', '80~89세', '90~99세', '100세 이상'
 ]
 
+# x축 레이블을 '0~10' 형태(숫자만 남기고 '세' 제거, 10세 단위)로 변환
+x_labels = ['0~10' if age == '0~9세' else ('100+' if '100' in age else age.replace('세', '')) for age in age_brackets]
+
 target_cols = [f"{selected_year}년_{gender_code}_{age}" for age in age_brackets]
 
 region_row = df[df['지역명'] == selected_region].iloc[0]
@@ -72,40 +75,4 @@ population_values = [region_row[col] for col in target_cols]
 color_map = {
     "여성": "#FFB6C1",
     "남성": "#87CEEB",
-    "전체": "#9370DB"
-}
-line_color = color_map.get(selected_gender_label, "#9370DB")
-
-fig, ax = plt.subplots(figsize=(12, 6))
-
-ax.plot(
-    age_brackets, 
-    population_values, 
-    color=line_color, 
-    marker='o', 
-    linewidth=3, 
-    markersize=8, 
-    label=f"{selected_region} ({selected_gender_label})"
-)
-
-ax.grid(True, which='both', axis='both', linestyle='--', alpha=0.5)
-
-ax.yaxis.set_major_locator(ticker.MultipleLocator(100000))
-ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f"{int(x):,}"))
-
-ax.set_xlabel("나이 (연령대)", fontsize=12, labelpad=10)
-ax.set_ylabel("인구수 (명)", fontsize=12, labelpad=10)
-
-for i, txt in enumerate(population_values):
-    ax.annotate(f"{txt:,}", (age_brackets[i], population_values[i]), 
-                textcoords="offset points", xytext=(0, 8), ha='center', fontsize=9)
-
-plt.tight_layout()
-st.pyplot(fig)
-
-st.subheader("📋 선택 데이터 상세 보기")
-summary_df = pd.DataFrame({
-    '연령대': age_brackets,
-    '인구수(명)': [f"{val:,}" for val in population_values]
-})
-st.dataframe(summary_df.T)
+    "전체": "#937
