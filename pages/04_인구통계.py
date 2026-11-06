@@ -5,6 +5,7 @@ import matplotlib.ticker as ticker
 import matplotlib.font_manager as fm
 import os
 import platform
+import urllib.request
 
 # 1. 페이지 기본 설정
 st.set_page_config(
@@ -13,18 +14,30 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. 한글 깨짐 방지를 위한 폰트 설정
+# 2. 한글 폰트 자동 다운로드 및 강제 적용 (글자 깨짐 방지 핵심)
 def setup_korean_font():
-    current_os = platform.system()
-    if current_os == 'Windows':
-        plt.rc('font', family='Malgun Gothic')
-    elif current_os == 'Darwin':
-        plt.rc('font', family='AppleGothic')
+    font_path = 'NanumGothic.ttf'
+    
+    # 폰트 파일이 없으면 깃허브 등에서 무료 나눔고딕 다운로드
+    if not os.path.exists(font_path):
+        try:
+            url = "https://github.com/google/fonts/raw/main/ofl/nanumgothic/NanumGothic-Regular.ttf"
+            urllib.request.urlretrieve(url, font_path)
+        except Exception:
+            pass
+
+    # 맷플롯립에 폰트 등록
+    if os.path.exists(font_path):
+        fm.fontManager.addfont(font_path)
+        font_name = fm.FontProperties(fname=font_path).get_name()
+        plt.rc('font', family=font_name)
     else:
-        font_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
-        if os.path.exists(font_path):
-            fm.fontManager.addfont(font_path)
-            plt.rc('font', family='NanumGothic')
+        # 운영체제별 기본 폰트 fallback
+        current_os = platform.system()
+        if current_os == 'Windows':
+            plt.rc('font', family='Malgun Gothic')
+        elif current_os == 'Darwin':
+            plt.rc('font', family='AppleGothic')
         else:
             plt.rc('font', family='sans-serif')
             
@@ -60,64 +73,4 @@ selected_region = st.sidebar.selectbox("행정구 선택", region_list, index=0)
 
 gender_options = {"전체": "거주자", "남성": "남_거주자", "여성": "여_거주자"}
 selected_gender_label = st.sidebar.selectbox("성별 선택", list(gender_options.keys()), index=0)
-gender_code = gender_options[selected_gender_label]
-
-selected_year = st.sidebar.slider("연도 선택", min_value=2020, max_value=2025, value=2024)
-
-# 6. 선택한 조건에 따른 데이터 추출
-age_brackets = [
-    '0~9세', '10~19세', '20~29세', '30~39세', '40~49세',
-    '50~59세', '60~69세', '70~79세', '80~89세', '90~99세', '100세 이상'
-]
-
-target_cols = [f"{selected_year}년_{gender_code}_{age}" for age in age_brackets]
-
-region_row = df[df['지역명'] == selected_region].iloc[0]
-population_values = [region_row[col] for col in target_cols]
-
-# 7. 성별에 따른 그래프 색상 설정 (여성: 베이비 핑크, 남성: 밝은 하늘색, 전체: 보라색)
-color_map = {
-    "여성": "#FFB6C1",  # 베이비 핑크
-    "남성": "#87CEEB",  # 밝은 하늘색
-    "전체": "#9370DB"   # 보라색
-}
-line_color = color_map.get(selected_gender_label, "#9370DB")
-
-# 8. 그래프 시각화
-fig, ax = plt.subplots(figsize=(12, 6))
-
-ax.plot(
-    age_brackets, 
-    population_values, 
-    color=line_color, 
-    marker='o', 
-    linewidth=3, 
-    markersize=8, 
-    label=f"{selected_region} ({selected_gender_label})"
-)
-
-ax.grid(True, which='both', axis='both', linestyle='--', alpha=0.5)
-
-ax.yaxis.set_major_locator(ticker.MultipleLocator(100000))
-ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f"{int(x):,}"))
-
-ax.set_xlabel("나이 (연령대)", fontsize=12, labelpad=10)
-ax.set_ylabel("인구수 (명)", fontsize=12, labelpad=10)
-
-# 선택한 연도와 행정구가 정확히 합쳐진 제목 설정
-ax.set_title(f"{selected_year}년 {selected_region} 인구 통계 ({selected_gender_label})", fontsize=16, pad=15, fontweight='bold')
-
-for i, txt in enumerate(population_values):
-    ax.annotate(f"{txt:,}", (age_brackets[i], population_values[i]), 
-                textcoords="offset points", xytext=(0, 8), ha='center', fontsize=9)
-
-plt.tight_layout()
-st.pyplot(fig)
-
-# 9. 선택된 조건 요약 데이터 표 보기
-st.subheader("📋 선택 데이터 상세 보기")
-summary_df = pd.DataFrame({
-    '연령대': age_brackets,
-    '인구수(명)': [f"{val:,}" for val in population_values]
-})
-st.dataframe(summary_df.T)
+gender_code = gender
