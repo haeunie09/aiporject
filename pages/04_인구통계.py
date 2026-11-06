@@ -5,6 +5,7 @@ import matplotlib.ticker as ticker
 import matplotlib.font_manager as fm
 import os
 import platform
+import urllib.request
 
 st.set_page_config(
     page_title="서울시 인구 통계 분석",
@@ -12,17 +13,29 @@ st.set_page_config(
     layout="wide"
 )
 
+# [핵심] 한글 깨짐 방지: 서버 환경에서 나눔고딕 폰트 자동 다운로드 및 강제 적용
 def setup_korean_font():
-    current_os = platform.system()
-    if current_os == 'Windows':
-        plt.rc('font', family='Malgun Gothic')
-    elif current_os == 'Darwin':
-        plt.rc('font', family='AppleGothic')
+    font_path = 'NanumGothic.ttf'
+    
+    # 폰트 파일이 없으면 깃허브에서 무료 나눔고딕 다운로드
+    if not os.path.exists(font_path):
+        try:
+            url = "https://github.com/google/fonts/raw/main/ofl/nanumgothic/NanumGothic-Regular.ttf"
+            urllib.request.urlretrieve(url, font_path)
+        except Exception:
+            pass
+
+    # 맷플롯립에 폰트 등록
+    if os.path.exists(font_path):
+        fm.fontManager.addfont(font_path)
+        font_name = fm.FontProperties(fname=font_path).get_name()
+        plt.rc('font', family=font_name)
     else:
-        font_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
-        if os.path.exists(font_path):
-            fm.fontManager.addfont(font_path)
-            plt.rc('font', family='NanumGothic')
+        current_os = platform.system()
+        if current_os == 'Windows':
+            plt.rc('font', family='Malgun Gothic')
+        elif current_os == 'Darwin':
+            plt.rc('font', family='AppleGothic')
         else:
             plt.rc('font', family='sans-serif')
             
