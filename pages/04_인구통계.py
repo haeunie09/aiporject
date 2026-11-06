@@ -105,4 +105,26 @@ else:
 
 st.divider()
 st.subheader("🏆 특정 연령대 인구 상위 자치구 순위")
-st.write("특정 연령대(10살 단위)를 선택하면 해당 연령 인구가 가장 많은 자치구들을 막대 그래프로 확인할 수 있습니다
+st.write("특정 연령대(10살 단위)를 선택하면 해당 연령 인구가 가장 많은 자치구들을 막대 그래프로 확인할 수 있습니다.")
+
+col1, col2 = st.sidebar.columns(2)
+with col1:
+    selected_age_idx = st.selectbox("연령대 선택", range(len(age_brackets)), format_func=lambda x: x_labels[x])
+with col2:
+    top_n = st.slider("표시할 구 개수", min_value=5, max_value=25, value=10)
+
+target_col_name = target_cols[selected_age_idx]
+target_age_label = x_labels[selected_age_idx]
+
+ranked_df = df[['지역명', target_col_name]].sort_values(by=target_col_name, ascending=False).head(top_n)
+
+fig2, ax2 = plt.subplots(figsize=(12, 5))
+bars = ax2.bar(ranked_df['지역명'], ranked_df[target_col_name], color='#87CEEB', edgecolor='#4682B4')
+
+ax2.grid(True, which='both', axis='y', linestyle='--', alpha=0.5)
+ax2.yaxis.set_major_locator(ticker.MultipleLocator(20000))
+ax2.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: f"{int(x):,}"))
+
+ax2.set_xlabel("행정구", fontsize=12, labelpad=10)
+ax2.set_ylabel("인\n구\n수", fontsize=12, labelpad=10, rotation=0, va='center')
+ax2.set_title(f"[{selected_year}년] {target_age_label}세 연령대 인구 상위
