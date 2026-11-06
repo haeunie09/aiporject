@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -55,7 +54,7 @@ def load_data():
 
 df = load_data()
 
-# 💡 '서울시' 데이터를 데이터프레임 전체에서 원천적으로 아예 제외시킵니다.
+# 💡 '서울시' 데이터를 데이터프레임 전체에서 원천적으로 제외
 df = df[df['지역명'] != '서울시'].reset_index(drop=True)
 
 st.title("📊 서울시 구별 연령대 인구 분포 대시보드")
@@ -64,7 +63,7 @@ st.write("행정구 복수 비교 및 특정 연령대별 최다 거주 지역 �
 st.sidebar.header("⚙️ 분석 조건 선택")
 
 region_list = df['지역명'].tolist()
-selected_regions = st.sidebar.multiselect("비교할 행정구 선택 (복수 가능)", region_list, default=[region_list[0]])
+selected_regions = st.sidebar.multiselect("비교할 행정구 선택 (복수 가능)", region_list, default=[region_list[0] if region_list else ''])
 selected_year = st.sidebar.slider("연도 선택", min_value=2020, max_value=2025, value=2024)
 
 age_brackets = [
@@ -74,7 +73,7 @@ age_brackets = [
 
 x_labels = ['0~10' if age == '0~9세' else ('100+' if '100' in age else age.replace('세', '')) for age in age_brackets]
 
-# --- [기능 1] 선택 자치구별 남녀 인구 꺾은선 비교 그래프 ---
+# --- [기능 1] 선택 자치구별 여성(베이비핑크) / 남성(연한하늘색) 꺾은선 비교 그래프 ---
 st.subheader(f"📈 [{selected_year}년] 선택 자치구 성별 연령별 인구 비교")
 
 if not selected_regions:
@@ -115,7 +114,7 @@ else:
 
 st.divider()
 
-# --- [기능 2] 특정 연령대별 상위 자치구 순위 막대 그래프 ---
+# --- [기능 2] 특정 연령대별 상위 자치구 순위 막대 그래프 (서울시 완전 제외) ---
 st.subheader("🏆 특정 연령대 인구 상위 자치구 순위 (서울시 제외)")
 st.write("원하시는 연령대와 표시할 자치구 개수를 선택하여 순위를 확인하세요.")
 
@@ -162,5 +161,3 @@ for region in selected_regions:
 
 summary_df = pd.DataFrame(summary_data, index=age_brackets)
 st.dataframe(summary_df)
-
-```
