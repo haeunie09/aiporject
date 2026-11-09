@@ -24,7 +24,7 @@ def load_data():
     
     df['월'] = date_split[0].map(month_map)
     
-    # 2자리 연도를 4자리 연도로 변환 (2026년까지 정확히 반영)
+    # 2자리 연도를 4자리 연도로 변환
     def parse_year(yr_str):
         yr = int(yr_str)
         if yr <= 26:
@@ -45,34 +45,39 @@ try:
         format_func=lambda x: f"{x}월"
     )
 
-    # 선택된 월의 데이터 필터링 및 연도순 정렬
-    filtered_df = df[df['월'] == selected_month].groupby('연도', as_index=False).mean(numeric_only=True)
-    filtered_df = filtered_df.sort_values('연도')
+    # 3. 데이터 필터링 및 중복 연도 제거 (마지막 데이터 기준 또는 평균 처리)
+    filtered_df = df[df['월'] == selected_month].copy()
+    # 중복 연도가 있을 경우 마지막 행을 채택하거나 평균 처리 (여기서는 깔끔하게 평균 처리 후 연도순 정렬)
+    filtered_df = filtered_df.groupby('연도', as_index=False).agg({
+        '최고기온(℃)': 'max',
+        '최저기온(℃)': 'min',
+        '평균기온(℃)': 'mean'
+    }).sort_values('연도')
 
-    # 3. 그래프 생성
+    # 4. 그래프 생성
     fig, ax = plt.subplots(figsize=(12, 6))
 
     # 최고기온(연한 보라색 #B19CD9), 최저기온(연한 연두색 #98FB98)
     ax.plot(filtered_df['연도'], filtered_df['최고기온(℃)'], label='Max Temp', color='#B19CD9', linewidth=2, marker='o', markersize=4)
     ax.plot(filtered_df['연도'], filtered_df['최저기온(℃)'], label='Min Temp', color='#98FB98', linewidth=2, marker='o', markersize=4)
 
-    # 4. 그래프 제목 및 범례 설정
+    # 5. 그래프 제목 및 범례 설정 (글자 깨짐 방지 영문 표기)
     ax.set_title("Monthly Temperature Analysis", fontsize=16, pad=15)
     ax.legend(loc='upper right', fontsize=11)
 
-    # 5. 축 레이블 설정
+    # 6. 축 레이블 설정
     ax.set_xlabel("Year", fontsize=12)
     ax.set_ylabel("Temperature", fontsize=12)
 
-    # 6. X축(연도) 범위를 2026년까지 확실하게 강제 고정
+    # 7. X축 범위를 데이터의 실제 최소/최대 연도(2026년 포함)까지 완벽하게 강제 고정
     min_year = int(filtered_df['연도'].min())
-    max_year = int(filtered_df['연도'].max()) # 이 값은 2026이 됩니다.
+    max_year = int(filtered_df['연도'].max())  # 2026년까지 포함됨
     
-    ax.set_xlim(min_year - 0.5, max_year + 0.5)
+    ax.set_xlim(min_year - 1, max_year + 1)
     
-    # X축 눈금을 5년 단위로 명확하게 표시하여 2026년까지 전부 보이도록 설정
+    # X축 눈금을 5년 단위로 명확하게 설정하여 2026년까지 모두 표시
     ax.set_xticks(np.arange(min_year, max_year + 1, 5))
-    plt.xticks(rotation=45) # 연도가 겹치지 않게 살짝 회전
+    plt.xticks(rotation=45)
 
     # 그리드 추가 및 레이아웃 정리
     ax.grid(True, linestyle='--', alpha=0.5)
