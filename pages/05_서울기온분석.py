@@ -23,7 +23,7 @@ def load_data():
     
     df['월'] = date_split[0].map(month_map)
     
-    # 2자리 연도를 4자리 연도로 변환 (26년까지 포함하여 2026년까지 정확히 반영)
+    # 2자리 연도를 4자리 연도로 변환 (2026년 데이터까지 정확히 포함)
     def parse_year(yr_str):
         yr = int(yr_str)
         if yr <= 26:
@@ -44,25 +44,26 @@ try:
         format_func=lambda x: f"{x}월"
     )
 
-    # 선택된 월의 데이터 필터링 및 연도순 정렬 (2026년 데이터까지 포함됨)
+    # 선택된 월의 데이터 필터링 및 연도순 정렬
     filtered_df = df[df['월'] == selected_month].sort_values('연도')
 
     # 3. 그래프 생성
     fig, ax = plt.subplots(figsize=(12, 6))
 
-    # 최고기온: 연한 보라색 (#B19CD9), 최저기온: 연한 연두색 (#98FB98)
-    ax.plot(filtered_df['연도'], filtered_df['최고기온(℃)'], label='최고기온', color='#B19CD9', linewidth=2, marker='o', markersize=4)
-    ax.plot(filtered_df['연도'], filtered_df['최저기온(℃)'], label='최저기온', color='#98FB98', linewidth=2, marker='o', markersize=4)
+    # 최고기온(연한 보라색 #B19CD9), 최저기온(연한 연두색 #98FB98)
+    # 폰트 깨짐을 방지하기 위해 범례(label)를 영문으로 지정
+    ax.plot(filtered_df['연도'], filtered_df['최고기온(℃)'], label='Max Temp', color='#B19CD9', linewidth=2, marker='o', markersize=4)
+    ax.plot(filtered_df['연도'], filtered_df['최저기온(℃)'], label='Min Temp', color='#98FB98', linewidth=2, marker='o', markersize=4)
 
-    # 4. 그래프 제목 설정 (요청하신 대로 '월별 기온분석' 설정)
-    ax.set_title("월별 기온분석", fontsize=16, pad=15)
+    # 4. 그래프 제목 (영문으로 설정하여 글자 깨짐 완전 방지)
+    ax.set_title("Monthly Temperature Analysis", fontsize=16, pad=15)
     ax.legend(loc='upper right', fontsize=11)
 
-    # 5. 축 레이블 (깨짐 방지를 위해 기호나 한글을 완전히 배제하고 깔끔하게 설정)
+    # 5. 축 레이블 설정
     ax.set_xlabel("Year", fontsize=12)
     ax.set_ylabel("Temperature", fontsize=12)
 
-    # X축 연도 범위를 데이터에 맞게 2026년까지 확실하게 표시
+    # X축 연도 범위를 2026년 데이터까지 확실하게 표시
     if not filtered_df.empty:
         ax.set_xlim(filtered_df['연도'].min() - 1, filtered_df['연도'].max() + 1)
 
