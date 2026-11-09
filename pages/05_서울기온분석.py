@@ -45,9 +45,8 @@ try:
         format_func=lambda x: f"{x}월"
     )
 
-    # 3. 데이터 필터링 및 중복 연도 제거 (마지막 데이터 기준 또는 평균 처리)
+    # 3. 데이터 필터링 및 중복 연도 평균 처리
     filtered_df = df[df['월'] == selected_month].copy()
-    # 중복 연도가 있을 경우 마지막 행을 채택하거나 평균 처리 (여기서는 깔끔하게 평균 처리 후 연도순 정렬)
     filtered_df = filtered_df.groupby('연도', as_index=False).agg({
         '최고기온(℃)': 'max',
         '최저기온(℃)': 'min',
@@ -69,14 +68,18 @@ try:
     ax.set_xlabel("Year", fontsize=12)
     ax.set_ylabel("Temperature", fontsize=12)
 
-    # 7. X축 범위를 데이터의 실제 최소/최대 연도(2026년 포함)까지 완벽하게 강제 고정
+    # 7. X축 범위 및 눈금 설정 (마지막 연도인 2026년까지 눈금이 확실히 표시되도록 수정)
     min_year = int(filtered_df['연도'].min())
-    max_year = int(filtered_df['연도'].max())  # 2026년까지 포함됨
+    max_year = int(filtered_df['연도'].max())  # 2026년 포함
     
     ax.set_xlim(min_year - 1, max_year + 1)
     
-    # X축 눈금을 5년 단위로 명확하게 설정하여 2026년까지 모두 표시
-    ax.set_xticks(np.arange(min_year, max_year + 1, 5))
+    # 5년 단위 눈금을 만들되, 마지막 해(max_year)가 빠지지 않도록 목록에 강제로 포함
+    ticks = list(range(min_year, max_year + 1, 5))
+    if max_year not in ticks:
+        ticks.append(max_year)
+    ax.set_xticks(ticks)
+    
     plt.xticks(rotation=45)
 
     # 그리드 추가 및 레이아웃 정리
