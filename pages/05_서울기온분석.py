@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 # 페이지 기본 설정
 st.set_page_config(page_title="월별 기온 분석", layout="wide")
@@ -23,7 +24,7 @@ def load_data():
     
     df['월'] = date_split[0].map(month_map)
     
-    # 2자리 연도를 4자리 연도로 변환
+    # 2자리 연도를 4자리 연도로 변환 (2026년까지 정확히 반영)
     def parse_year(yr_str):
         yr = int(yr_str)
         if yr <= 26:
@@ -44,7 +45,7 @@ try:
         format_func=lambda x: f"{x}월"
     )
 
-    # 선택된 월의 데이터 필터링 및 연도순 정렬 (중복 연도가 있다면 평균 처리 혹은 마지막 값 유지)
+    # 선택된 월의 데이터 필터링 및 연도순 정렬
     filtered_df = df[df['월'] == selected_month].groupby('연도', as_index=False).mean(numeric_only=True)
     filtered_df = filtered_df.sort_values('연도')
 
@@ -52,11 +53,10 @@ try:
     fig, ax = plt.subplots(figsize=(12, 6))
 
     # 최고기온(연한 보라색 #B19CD9), 최저기온(연한 연두색 #98FB98)
-    # 글자 깨짐 방지를 위해 범례 라벨을 영문으로 지정
     ax.plot(filtered_df['연도'], filtered_df['최고기온(℃)'], label='Max Temp', color='#B19CD9', linewidth=2, marker='o', markersize=4)
     ax.plot(filtered_df['연도'], filtered_df['최저기온(℃)'], label='Min Temp', color='#98FB98', linewidth=2, marker='o', markersize=4)
 
-    # 4. 그래프 제목 및 범례 설정 (글자 깨짐 방지를 위해 영문 사용)
+    # 4. 그래프 제목 및 범례 설정
     ax.set_title("Monthly Temperature Analysis", fontsize=16, pad=15)
     ax.legend(loc='upper right', fontsize=11)
 
@@ -64,14 +64,15 @@ try:
     ax.set_xlabel("Year", fontsize=12)
     ax.set_ylabel("Temperature", fontsize=12)
 
-    # 6. X축(연도) 범위를 2026년(데이터의 최신 연도)까지 명확하게 강제 지정
+    # 6. X축(연도) 범위를 2026년까지 확실하게 강제 고정
     min_year = int(filtered_df['연도'].min())
-    max_year = int(filtered_df['연도'].max())
-    ax.set_xlim(min_year - 1, max_year + 1)
+    max_year = int(filtered_df['연도'].max()) # 이 값은 2026이 됩니다.
     
-    # X축 눈금(Ticks)을 5년 단위 또는 적절히 끊어서 2026년까지 전부 표시되도록 설정
-    import numpy as np
+    ax.set_xlim(min_year - 0.5, max_year + 0.5)
+    
+    # X축 눈금을 5년 단위로 명확하게 표시하여 2026년까지 전부 보이도록 설정
     ax.set_xticks(np.arange(min_year, max_year + 1, 5))
+    plt.xticks(rotation=45) # 연도가 겹치지 않게 살짝 회전
 
     # 그리드 추가 및 레이아웃 정리
     ax.grid(True, linestyle='--', alpha=0.5)
