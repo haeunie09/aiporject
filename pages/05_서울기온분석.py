@@ -1,26 +1,13 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import platform
-
-# 1. 맷플롯립 한글 폰트 설정 (운영체제별 자동 대응)
-if platform.system() == 'Windows':
-    plt.rc('font', family='Malgun Gothic')
-elif platform.system() == 'Darwin':
-    plt.rc('font', family='AppleGothic')
-else:
-    # 스트림릿 클라우드(Linux) 환경에서 한글 깨짐 방지를 위한 조치
-    plt.rc('font', family='DejaVu Sans')
-
-# 마이너스 기호 깨짐 방지
-plt.rcParams['axes.unicode_minus'] = False
 
 # 페이지 기본 설정
 st.set_page_config(page_title="월별 기온 분석", layout="wide")
 
 st.title("월별 기온 분석 애플리케이션")
 
-# 2. 데이터 불러오기 (한글 깨짐 방지: cp949 인코딩 사용)
+# 1. 데이터 불러오기 (한글 깨짐 방지: cp949 인코딩 사용)
 @st.cache_data
 def load_data():
     df = pd.read_csv('temperature.csv', encoding='cp949')
@@ -36,7 +23,7 @@ def load_data():
     
     df['월'] = date_split[0].map(month_map)
     
-    # 2자리 연도를 4자리 연도로 변환
+    # 2자리 연도를 4자리 연도로 변환 (26년까지 포함하여 2026년까지 정확히 반영)
     def parse_year(yr_str):
         yr = int(yr_str)
         if yr <= 26:
@@ -50,30 +37,34 @@ def load_data():
 try:
     df = load_data()
 
-    # 3. 월 선택 셀렉트박스
+    # 2. 월 선택 셀렉트박스
     selected_month = st.selectbox(
         "분석할 월을 선택하세요:",
         options=list(range(1, 13)),
         format_func=lambda x: f"{x}월"
     )
 
-    # 선택된 월의 데이터 필터링 및 연도순 정렬
+    # 선택된 월의 데이터 필터링 및 연도순 정렬 (2026년 데이터까지 포함됨)
     filtered_df = df[df['월'] == selected_month].sort_values('연도')
 
-    # 4. 그래프 생성
+    # 3. 그래프 생성
     fig, ax = plt.subplots(figsize=(12, 6))
 
     # 최고기온: 연한 보라색 (#B19CD9), 최저기온: 연한 연두색 (#98FB98)
     ax.plot(filtered_df['연도'], filtered_df['최고기온(℃)'], label='최고기온', color='#B19CD9', linewidth=2, marker='o', markersize=4)
     ax.plot(filtered_df['연도'], filtered_df['최저기온(℃)'], label='최저기온', color='#98FB98', linewidth=2, marker='o', markersize=4)
 
-    # 5. 그래프 제목 및 범례 설정 (제목: 월별 기온분석)
+    # 4. 그래프 제목 설정 (요청하신 대로 '월별 기온분석' 설정)
     ax.set_title("월별 기온분석", fontsize=16, pad=15)
     ax.legend(loc='upper right', fontsize=11)
 
-    # 6. 축 레이블 설정 (가로축: 연도 / 세로축: 기온, 깨짐 방지를 위해 명확한 레이블 지정)
-    ax.set_xlabel("Year (연도)", fontsize=12)
-    ax.set_ylabel("Temperature (°C)", fontsize=12)
+    # 5. 축 레이블 (깨짐 방지를 위해 기호나 한글을 완전히 배제하고 깔끔하게 설정)
+    ax.set_xlabel("Year", fontsize=12)
+    ax.set_ylabel("Temperature", fontsize=12)
+
+    # X축 연도 범위를 데이터에 맞게 2026년까지 확실하게 표시
+    if not filtered_df.empty:
+        ax.set_xlim(filtered_df['연도'].min() - 1, filtered_df['연도'].max() + 1)
 
     # 그리드 추가 및 레이아웃 정리
     ax.grid(True, linestyle='--', alpha=0.5)
