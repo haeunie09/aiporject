@@ -112,11 +112,11 @@ for name, m in models.items():
 active_model = models[selected_algo]
 active_pred = predictions[selected_algo]
 
-# 알고리즘별 시각화 스타일 지정
+# 💡 요청하신 연한 색상(파랑, 노랑, 연두) 팔레트 적용
 algo_colors = {
-    "선형회귀 (Linear Regression)": "#FF6B6B",        # 코랄 레드
-    "다항회귀 (Polynomial Regression)": "#9B5DE5",     # 퍼플
-    "랜덤 포레스트 회귀 (Random Forest)": "#00BBF9"    # 스카이 블루
+    "선형회귀 (Linear Regression)": "#79B4ED",        # 연한 파랑 (Soft Blue)
+    "다항회귀 (Polynomial Regression)": "#F7D070",     # 연한 노랑 (Soft Yellow)
+    "랜덤 포레스트 회귀 (Random Forest)": "#85E3B8"    # 연한 연두 (Soft Green)
 }
 active_color = algo_colors[selected_algo]
 
@@ -145,19 +145,19 @@ fig.add_trace(go.Scatter(
     y=month_df["평균기온(℃)"],
     mode="lines+markers",
     name="과거 실제 평균기온",
-    line=dict(color="rgba(120, 120, 120, 0.3)", width=1.5),
-    marker=dict(color="#5C6B73", size=6),
+    line=dict(color="rgba(150, 150, 150, 0.25)", width=1.5),
+    marker=dict(color="#8C9A9E", size=5),
     hovertemplate="<b>%{x}년</b><br>실제 평균기온: %{y:.1f}℃<extra></extra>"
 ))
 
-# (2) 선택된 모델의 과거 학습 곡선(직선)
+# (2) 선택된 모델의 과거 학습 곡선
 y_pred_past = active_model.predict(X)
 fig.add_trace(go.Scatter(
     x=month_df["Year"],
     y=y_pred_past,
     mode="lines",
     name=f"{selected_algo.split(' ')[0]} 학습 패턴",
-    line=dict(color=active_color, width=3),
+    line=dict(color=active_color, width=3.5),
     hovertemplate="<b>%{x}년 학습값</b><br>모델 기온: %{y:.2f}℃<extra></extra>"
 ))
 
@@ -169,7 +169,7 @@ fig.add_trace(go.Scatter(
     y=future_preds,
     mode="lines",
     name=f"{selected_algo.split(' ')[0]} 미래 예측 경로",
-    line=dict(color=active_color, width=3, dash="dash"),
+    line=dict(color=active_color, width=3.5, dash="dash"),
     hoverinfo="skip"
 ))
 
@@ -179,14 +179,14 @@ fig.add_trace(go.Scatter(
     y=[active_pred],
     mode="markers+text",
     name=f"★ {selected_algo.split(' ')[0]} 예측값",
-    marker=dict(color=active_color, size=16, symbol="star", line=dict(color="black", width=1)),
+    marker=dict(color=active_color, size=16, symbol="star", line=dict(color="#333333", width=1)),
     text=[f"  {selected_algo.split(' ')[0]}: {active_pred:.2f}℃"],
     textposition="middle right",
-    textfont=dict(size=13, color=active_color),
+    textfont=dict(size=13, color="#333333", family="sans-serif"),
     hovertemplate=f"<b>{target_year}년 {selected_month}월 ({selected_algo.split(' ')[0]})</b><br>예측 기온: {active_pred:.2f}℃<extra></extra>"
 ))
 
-# (5) 비교용: 나머지 2개 알고리즘의 예측 지점도 함께 표시 (체크박스 활성화 시)
+# (5) 비교용: 나머지 알고리즘 예측점 함께 표시
 if show_all_compare:
     for name, pred_val in predictions.items():
         if name != selected_algo:
@@ -196,10 +196,10 @@ if show_all_compare:
                 y=[pred_val],
                 mode="markers+text",
                 name=f"비교: {short_name} 예측값",
-                marker=dict(color=algo_colors[name], size=11, symbol="diamond", opacity=0.8),
+                marker=dict(color=algo_colors[name], size=12, symbol="diamond", line=dict(color="#555555", width=0.8)),
                 text=[f"  {short_name}: {pred_val:.2f}℃"],
                 textposition="middle right",
-                textfont=dict(size=11, color=algo_colors[name]),
+                textfont=dict(size=11, color="#555555"),
                 hovertemplate=f"<b>{target_year}년 {selected_month}월 ({short_name})</b><br>예측 기온: {pred_val:.2f}℃<extra></extra>"
             ))
 
