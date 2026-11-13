@@ -4,60 +4,84 @@ import seaborn as sns
 import streamlit as st
 from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
 
 # 페이지 설정
 st.set_page_config(
-    page_title="봄날의 붓꽃 찾기", page_icon="🌷", layout="wide"
+    page_title="Spring Garden Iris Classifier", page_icon="🌷", layout="wide"
 )
 
-st.title("🌷 봄날의 붓꽃 정원: 내 마음속 품종 찾기")
+st.title("🌷 봄날의 붓꽃 정원: AI 품종 판독소")
 st.write(
-    "꽃잎의 너비와 길이를 조절해 보세요. 따스한 봄의 색감으로 AI가 붓꽃의 운명을 점쳐드립니다! ✨"
+    "꽃잎의 너비와 길이를 조절해 보세요. 화사한 봄의 색감 속에서 AI 알고리즘들이 붓꽃의 운명을 점쳐드립니다! ✨"
 )
 
 
-# 1. 데이터 로드 및 모델 학습
+# 1. 데이터 로드
 @st.cache_resource
-def load_data_and_model():
+def load_data():
     iris = load_iris()
     df = pd.DataFrame(iris.data, columns=iris.feature_names)
     df["species"] = iris.target
-    # 범례나 결과에서 사용할 품종명 (영문 조합으로 글자 깨짐 방지)
+    # 폰트 깨짐 방지를 위해 범례도 깔끔한 영문으로 통일
     df["species_name"] = df["species"].map(
-        {0: "Setosa (세토사)", 1: "Versicolor (버시컬러)", 2: "Virginica (버지니카)"}
+        {0: "Setosa", 1: "Versicolor", 2: "Virginica"}
     )
-
-    X = df[["petal width (cm)", "petal length (cm)"]]
-    y = df["species"]
-
-    model = RandomForestClassifier(random_state=42)
-    model.fit(X, y)
-
-    return df, model, [
-        "Setosa (세토사)",
-        "Versicolor (버시컬러)",
-        "Virginica (버지니카)",
-    ]
+    return df, iris.target_names
 
 
-df, model, target_names = load_data_and_model()
+df, target_names = load_data()
 
-# 2. 사이드바 - 사용자 입력 (가로: 너비, 세로: 길이)
-st.sidebar.header("🌿 봄 정원 꽃잎 스펙 설정소")
+# 2. 사이드바 - 사용자 입력 및 알고리즘 선택
+st.sidebar.header("🌿 봄 정원 설정소")
+
+# 알고리즘 선택 옵션
+algorithm_choice = st.sidebar.selectbox(
+    "AI 알고리즘 선택",
+    [
+        "Random Forest (랜덤 포레스트)",
+        "K-NN (K-최근접 이웃)",
+        "SVM (서포트 벡터 머신)",
+    ],
+)
+
 petal_width = st.sidebar.slider(
-    "꽃잎 너비 (Petal Width, cm) [가로축]",
+    "Petal Width (cm) [Width / 가로]",
     float(df["petal width (cm)"].min()),
     float(df["petal width (cm)"].max()),
     float(df["petal width (cm)"].mean()),
 )
 petal_length = st.sidebar.slider(
-    "꽃잎 길이 (Petal Length, cm) [세로축]",
+    "Petal Length (cm) [Length / 세로]",
     float(df["petal length (cm)"].min()),
     float(df["petal length (cm)"].max()),
     float(df["petal length (cm)"].mean()),
 )
 
-# 3. 예측 수행
+# 3. 선택한 알고리즘에 따른 모델 학습 및 예측
+X = df[["petal width (cm)", "petal length (cm)"]]
+y = df["species"]
+
+if algorithm_choice == "Random Forest (랜덤 포레스트)":
+    model = RandomForestClassifier(random_state=42)
+    algo_desc = (
+        "**랜덤 포레스트 (Random Forest)**: 여러 개의 의사결정 나무(Decision Tree)들이 모여 다수결로 똑똑하게 정답을 맞히는 앙상블 알고리즘입니다. 숲처럼 든든하고 안정적인 예측을 보여줘요!"
+    )
+elif algorithm_choice == "K-NN (K-최근접 이웃)":
+    model = KNeighborsClassifier(n_neighbors=5)
+    algo_desc = (
+        "**K-NN (K-Nearest Neighbors)**: '내 이웃의 주민을 보면 나를 알 수 있다!'는 철학을 가진 알고리즘입니다. 내 주변에서 가장 가까운 5마리의 붓꽃 친구들을 살펴보고 가장 많은 품종으로 줄을 세워요."
+    )
+else:
+    model = SVC(probability=True, random_state=42)
+    algo_desc = (
+        "**SVM (Support Vector Machine)**: 품종들 사이에 가장 완벽하고 안전한 철벽 방어선(경계면)을 그어서, 새로운 꽃이 어느 구역에 안전하게 안착할지 냉철하게 분석하는 알고리즘입니다."
+    )
+
+model.fit(X, y)
+
+# 예측 수행
 input_data = pd.DataFrame(
     [[petal_width, petal_length]],
     columns=["petal width (cm)", "petal length (cm)"],
@@ -73,24 +97,27 @@ col1, col2 = st.columns(2)
 with col1:
     st.subheader("🎯 봄바람 타고 온 품종 판독 결과")
     st.success(
-        f"살랑살랑 봄바람을 타고온 이 꽃의 정체는 바로 **'{predicted_species}'**!"
+        f"선택하신 알고리즘이 분석한 결과, 이 꽃은 **'{predicted_species.upper()}'** 품종입니다!"
     )
 
     st.write("**품종별 적중 확률 분석:**")
     for i, name in enumerate(target_names):
         st.write(f"- `{name}`: {prediction_proba[i]*100:.2f}%")
 
-with col2:
-    st.subheader("🌸 핑크빛 봄 정원 지형도 (너비 vs 길이)")
+    st.markdown("---")
+    st.subheader("💡 선택한 AI 알고리즘 이야기")
+    st.info(algo_desc)
 
-    # 4. 시각화 (봄 느낌의 화사한 색상 적용 & 폰트 깨짐 방지용 안전 영문/기호 조합)
+with col2:
+    st.subheader("🌸 Spring Garden Iris Map")
+
+    # 4. 시각화 (폰트 깨짐을 완벽히 막기 위해 순수 영문 레이블 사용)
     fig, ax = plt.subplots(figsize=(7, 5))
 
-    # 봄 느낌 파스텔톤 팔레트
     spring_palette = {
-        "Setosa (세토사)": "#85E3FF",  # 싱그러운 하늘빛
-        "Versicolor (버시컬러)": "#FFB3BA",  # 따스한 핑크빛
-        "Virginica (버지니카)": "#BAABFF",  # 은은한 라벤더빛
+        "Setosa": "#85E3FF",  # 싱그러운 하늘빛
+        "Versicolor": "#FFB3BA",  # 따스한 핑크빛
+        "Virginica": "#BAABFF",  # 은은한 라벤더빛
     }
 
     sns.scatterplot(
@@ -104,36 +131,30 @@ with col2:
         alpha=0.8,
     )
 
-    # 사용자가 입력한 값 표시 (진분홍색 별표 마커)
+    # 사용자 입력값 표시 (진분홍색 별표 마커)
     ax.scatter(
         [petal_width],
         [petal_length],
         color="#FF1493",
         s=300,
         marker="*",
-        label="My Spring Pick (나의 픽)",
+        label="My Spring Pick",
         zorder=5,
     )
 
-    # 그래프 내부 텍스트는 영문으로 작성하여 클라우드 환경에서 깨짐 현상 원천 차단
-    ax.set_xlabel("Petal Width (cm) [꽃잎 너비]")
-    ax.set_ylabel("Petal Length (cm) [꽃잎 길이]")
-    ax.set_title(
-        "Spring Garden Iris Map (Width vs Length)", fontsize=12, pad=12
-    )
+    # 100% 깨지지 않는 영문 축 및 타이틀
+    ax.set_xlabel("Petal Width (cm)")
+    ax.set_ylabel("Petal Length (cm)")
+    ax.set_title("Iris Cluster Map (Width vs Length)", fontsize=12, pad=12)
     ax.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
 
     ax.grid(True, linestyle="--", alpha=0.3)
 
     st.pyplot(fig)
 
-# 5. 분류 이유 설명
+# 5. 하단 탐정 리포트
 st.markdown("---")
 st.subheader("🌷 AI 정원사의 따스한 추리 리포트")
-st.info(
-    f"""
-- **가로축(너비)** {petal_width}cm, **세로축(길이)** {petal_length}cm인 자리에 예쁜 꽃잎을 심어보았습니다[cite: 1, 2, 3, 4].
-- 이 위치는 봄 정원에서 **`{predicted_species}`** 품종들이 햇살을 받으며 모여 있는 구역과 완벽하게 맞아떨어집니다!
-- 싱그러운 봄의 기운을 담아 AI가 이 품종으로 다정하게 추천해 드립니다. 🌸✨
-"""
+st.write(
+    f"너비 **{petal_width}cm**, 길이 **{petal_length}cm** 위치에 피어난 꽃잎을 **{algorithm_choice}** 모델이 정성껏 진단했습니다. 화사한 봄 정원 속에서 이 꽃이 어떤 군집과 어울리는지 지형도에서 확인해보세요! ✨"
 )
