@@ -36,7 +36,7 @@ def load_data():
     df_drink2 = pd.read_csv('starbucks-menu-nutrition-drinks.csv')
     df_drink2.columns = df_drink2.columns.str.strip()
     df_drink2 = df_drink2[df_drink2['Calories'] != '-'].copy()
-    # 숫자형 변환
+    
     df_drink2['Calories'] = pd.to_numeric(df_drink2['Calories'])
     df_drink2['Fat (g)'] = pd.to_numeric(df_drink2['Fat (g)'], errors='coerce').fillna(0)
     df_drink2['Carb. (g)'] = pd.to_numeric(df_drink2['Carb. (g)'], errors='coerce').fillna(0)
@@ -89,10 +89,10 @@ if app_mode == "📋 개별 메뉴 영양 성분 조회":
         item_row = filtered_drinks[filtered_drinks['메뉴명'] == selected_item].iloc[0]
         
         col1, col2, col3, col4 = st.columns(4)
-        col1.metric("칼로리", f"{item_row['칼로리 (kcal)} kcal")
-        col2.metric("총 지방", f"{item_row['총 지방 (g)} g")
+        col1.metric("칼로리", f"{item_row['칼로리 (kcal)']} kcal")
+        col2.metric("총 지방", f"{item_row['총 지방 (g)']} g")
         col3.metric("당류", f"{item_row.get('당류 (g)', '-')} g")
-        col4.metric("단백질", f"{item_row['단백질 (g)} g")
+        col4.metric("단백질", f"{item_row['단백질 (g)']} g")
         
         st.markdown("#### 📋 상세 영양 성분표")
         display_cols = ['카테고리', '칼로리 (kcal)', '총 지방 (g)', '포화지방 (g)', '트랜스지방 (g)', 
@@ -111,10 +111,10 @@ if app_mode == "📋 개별 메뉴 영양 성분 조회":
         food_row = df_food[df_food['메뉴명'] == selected_food].iloc[0]
         
         col1, col2, col3, col4 = st.columns(4)
-        col1.metric("칼로리", f"{food_row['칼로리 (kcal)} kcal")
-        col2.metric("총 지방", f"{food_row['총 지방 (g)} g")
-        col3.metric("탄수화물", f"{food_row['탄수화물 (g)} g")
-        col4.metric("단백질", f"{food_row['단백질 (g)} g")
+        col1.metric("칼로리", f"{food_row['칼로리 (kcal)']} kcal")
+        col2.metric("지방", f"{food_row['총 지방 (g)']} g")
+        col3.metric("탄수화물", f"{food_row['탄수화물 (g)']} g")
+        col4.metric("단백질", f"{food_row['단백질 (g)']} g")
         
         st.markdown("#### 📋 상세 영양 성분표")
         display_cols = ['칼로리 (kcal)', '총 지방 (g)', '탄수화물 (g)', '식이섬유 (g)', '단백질 (g)']
@@ -128,7 +128,6 @@ elif app_mode == "🔍 맞춤형 음료 추천 (2번 기능)":
     st.subheader("🎯 나의 건강 취향에 맞는 스타벅스 음료 추천")
     st.markdown("원하는 영양 성분 조건을 설정하시면, 조건에 딱 맞는 음료 목록을 찾아드립니다!")
     
-    # 필터 조건 입력 슬라이더
     col_f1, col_f2 = st.columns(2)
     with col_f1:
         max_cal = st.slider("최대 칼로리 제한 (kcal)", 0, 550, 250, step=10)
@@ -137,11 +136,9 @@ elif app_mode == "🔍 맞춤형 음료 추천 (2번 기능)":
         min_protein = st.slider("최소 단백질 요구치 (g)", 0.0, 20.0, 5.0, step=0.5)
         caffeine_free = st.checkbox("카페인 없는 음료만 찾기 (카페인 0mg)")
 
-    # 필터링 로직 수행 (상세 음료 데이터프레임 기준)
     mask = (df_drink['칼로리 (kcal)'] <= max_cal) & (df_drink['단백질 (g)'] >= min_protein)
     
     if '당류 (g)' in df_drink.columns:
-        # 결측치 처리
         sugars_series = pd.to_numeric(df_drink['당류 (g)'], errors='coerce').fillna(0)
         mask = mask & (sugars_series <= max_sugar)
         
@@ -158,7 +155,6 @@ elif app_mode == "🔍 맞춤형 음료 추천 (2번 기능)":
         display_recommend_cols = ['메뉴명', '칼로리 (kcal)', '단백질 (g)', '당류 (g)', '총 지방 (g)', '카페인 (mg)']
         available_rec_cols = [c for c in display_recommend_cols if c in recommended_df.columns]
         
-        # 보기 좋은 표 형태로 출력
         st.dataframe(
             recommended_df[available_rec_cols].reset_index(drop=True),
             use_container_width=True,
@@ -169,7 +165,7 @@ elif app_mode == "🔍 맞춤형 음료 추천 (2번 기능)":
 
 st.markdown("---")
 
-# 🌍 국가별 인기도 비교 그래프 (디테일과 고급스러움을 대폭 강화)
+# 🌍 국가별 인기도 비교 그래프 (디테일 업그레이드)
 st.subheader("🌍 국가별 스타벅스 브랜드 인기도 비교")
 st.markdown("전 세계 주요 국가별 스타벅스 시장 점유율 및 인기도(%) 조사 결과입니다.")
 
@@ -179,7 +175,6 @@ country_data = pd.DataFrame({
     '순위': ['1위 (본고장)', '2위 (높은 밀도)', '3위 (아시아 선도)', '4위 (급성장 시장)', '6위 (유럽 거점)', '5위 (북미 핵심)', '7위 (남미 시장)']
 })
 
-# Plotly를 이용한 세련된 막대그래프 디자인
 fig = px.bar(
     country_data,
     x='나라',
@@ -187,11 +182,10 @@ fig = px.bar(
     text='인기도 (%)',
     hover_data=['순위'],
     color='인기도 (%)',
-    color_continuousScale=['#1E3932', '#00704A', '#00A862'], # 스타벅스 시그니처 그린 계열 渐变
+    color_continuousScale=['#1E3932', '#00704A', '#00A862'],
     title='2026년 기준 국가별 스타벅스 인기도 지수'
 )
 
-# 그래프 디테일 설정 (마우스 오버 툴팁, 글자 위치, 레이아웃 개선)
 fig.update_traces(
     texttemplate='%{text}%', 
     textposition='outside',
@@ -204,7 +198,7 @@ fig.update_layout(
     plot_bgcolor='rgba(0,0,0,0)',
     paper_bgcolor='rgba(0,0,0,0)',
     yaxis_range=[0, 110],
-    coloraxis_showscale=False,  # 컬러 바 숨기기 (깔끔함 유지)
+    coloraxis_showscale=False,
     xaxis_title=dict(text="<b>국가명</b>", font=dict(size=14)),
     yaxis_title=dict(text="<b>인기도 (%)</b>", font=dict(size=14)),
     title_font=dict(size=18, family="sans-serif", color="#00704A"),
