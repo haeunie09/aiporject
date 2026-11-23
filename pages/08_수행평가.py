@@ -72,8 +72,8 @@ def load_data():
 
 df_drink, df_food = load_data()
 
-# 사이드바 네비게이션
-app_mode = st.sidebar.radio("원하시는 메뉴를 선택하세요", ["📋 개별 메뉴 영양 성분 조회", "🔍 맞춤형 음료 추천 (2번 기능)"])
+# 사이드바 네비게이션 (괄호 안의 '2번 기능' 문구 제거 완료)
+app_mode = st.sidebar.radio("원하시는 메뉴를 선택하세요", ["📋 개별 메뉴 영양 성분 조회", "🔍 맞춤형 음료 추천"])
 
 if app_mode == "📋 개별 메뉴 영양 성분 조회":
     menu_type = st.sidebar.radio("메뉴 유형", ["음료 (Drinks)", "푸드 (Food)"])
@@ -124,7 +124,7 @@ if app_mode == "📋 개별 메뉴 영양 성분 조회":
         })
         st.dataframe(nut_table, use_container_width=True, hide_index=True)
 
-elif app_mode == "🔍 맞춤형 음료 추천 (2번 기능)":
+elif app_mode == "🔍 맞춤형 음료 추천":
     st.subheader("🎯 나의 건강 취향에 맞는 스타벅스 음료 추천")
     st.markdown("원하는 영양 성분 조건을 설정하시면, 조건에 딱 맞는 음료 목록을 찾아드립니다!")
     
@@ -165,7 +165,7 @@ elif app_mode == "🔍 맞춤형 음료 추천 (2번 기능)":
 
 st.markdown("---")
 
-# 🌍 국가별 인기도 비교 그래프 (디테일 업그레이드)
+# 🌍 국가별 인기도 비교 그래프
 st.subheader("🌍 국가별 스타벅스 브랜드 인기도 비교")
 st.markdown("전 세계 주요 국가별 스타벅스 시장 점유율 및 인기도(%) 조사 결과입니다.")
 
